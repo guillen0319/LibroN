@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nurys · Nuestra historia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#2a0f1f;
+  --wine:#4a1830;
+  --rose:#e8a4b8;
+  --blush:#f7dde4;
+  --paper:#fff7f2;
+  --ink:#4a2434;
+  --gold:#c99a4b;
+  --gold-soft:#e8c98a;
+  --script:'Pinyon Script','Snell Roundhand','Brush Script MT',cursive;
+  --serif:'Cormorant Garamond','Georgia','Times New Roman',serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:var(--serif);
+  background:radial-gradient(120% 90% at 50% 0%,#6b2544 0%,var(--wine) 40%,var(--night) 100%);
+  background-color:var(--night);
+  -webkit-tap-highlight-color:transparent;
+}
+#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+/* ---------- LOCK ---------- */
+#lock{
+  position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;text-align:center;color:var(--blush);
+  background:radial-gradient(100% 80% at 50% 20%,rgba(107,37,68,.55),rgba(42,15,31,.96));
+  transition:opacity .9s ease, visibility .9s;
+}
+#lock.gone{opacity:0;visibility:hidden}
+#lock .seal{width:64px;height:64px;margin-bottom:8px;color:var(--gold-soft);animation:beat 2.4s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}12%{transform:scale(1.12)}24%{transform:scale(1)}36%{transform:scale(1.08)}48%{transform:scale(1)}}
+#lock h1{font-family:var(--script);font-weight:400;font-size:clamp(40px,11vw,60px);margin:6px 0 4px;color:#fff}
+#lock p{margin:0 0 22px;font-size:19px;font-style:italic;opacity:.85}
+.dots{display:flex;gap:14px;margin-bottom:10px;height:18px}
+.dots i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--gold-soft);transition:background .2s, transform .2s}
+.dots i.on{background:var(--gold-soft);transform:scale(1.1)}
+.dots.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+#msg{min-height:24px;font-size:17px;font-style:italic;color:var(--rose);margin-bottom:12px}
+.pad{display:grid;grid-template-columns:repeat(3,68px);gap:12px}
+.pad button{
+  height:68px;border-radius:50%;border:1px solid rgba(232,201,138,.5);background:rgba(255,255,255,.05);
+  color:#fff;font:500 26px var(--serif);cursor:pointer;transition:background .15s, transform .1s;
+}
+.pad button:active{background:rgba(232,201,138,.3);transform:scale(.94)}
+.pad button:focus-visible,.nav button:focus-visible,#open:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px}
+.pad .ghost{border-color:transparent;background:none;font-size:20px}
+
+/* ---------- BOOK ---------- */
+#book{
+  position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));
+  opacity:0;transition:opacity 1.2s ease .3s;
+}
+#book.show{opacity:1}
+.stage{position:relative;width:min(560px,100%);flex:1;max-height:780px;perspective:1800px;min-height:0}
+.page{
+  position:absolute;inset:0;border-radius:6px 18px 18px 6px;
+  background:
+    radial-gradient(80% 60% at 50% 0%,rgba(247,221,228,.65),transparent 70%),
+    linear-gradient(180deg,var(--paper),#fbe9e4);
+  box-shadow:0 30px 60px rgba(0,0,0,.45), inset 10px 0 18px -10px rgba(74,36,52,.25), inset 0 0 0 1px rgba(201,154,75,.35);
+  transform-origin:left center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:clamp(28px,6vh,54px) clamp(26px,7vw,54px);
+  visibility:hidden;opacity:0;backface-visibility:hidden;overflow:hidden;
+}
+.page::before{ /* marco dorado interior */
+  content:"";position:absolute;inset:12px;border:1px solid rgba(201,154,75,.55);border-radius:3px 12px 12px 3px;pointer-events:none;
+}
+.page.active{visibility:visible;opacity:1;z-index:3}
+.page.leaving{visibility:visible;opacity:1;z-index:4;animation:turnOut .8s cubic-bezier(.5,.05,.3,1) forwards}
+.page.entering{visibility:visible;opacity:1;z-index:2;animation:fadeIn .8s ease both}
+.page.leaving-back{visibility:visible;opacity:1;z-index:2;animation:fadeOut .6s ease forwards}
+.page.entering-back{visibility:visible;opacity:1;z-index:4;animation:turnIn .8s cubic-bezier(.5,.05,.3,1) both}
+@keyframes turnOut{to{transform:rotateY(-105deg);opacity:.2;box-shadow:0 30px 60px rgba(0,0,0,.6)}}
+@keyframes turnIn{from{transform:rotateY(-105deg);opacity:.2}to{transform:rotateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:.3;transform:scale(.985)}to{opacity:1;transform:none}}
+@keyframes fadeOut{to{opacity:0}}
+
+.icon{width:58px;height:58px;color:var(--gold);margin-bottom:10px;flex:none}
+.page h2{font-family:var(--script);font-weight:400;font-size:clamp(38px,9.5vw,54px);line-height:1.05;margin:0 0 14px;color:var(--wine)}
+.rule{width:110px;height:10px;margin:0 auto 18px;color:var(--gold);flex:none}
+.page p{margin:0 0 .85em;font-size:clamp(18px,4.6vw,21px);line-height:1.5;max-width:30em}
+.page p.small{font-size:17px;font-style:italic;color:#7a4a5c}
+.page em{color:var(--wine)}
+.scroll{overflow-y:auto;max-height:100%;width:100%;display:flex;flex-direction:column;align-items:center;padding:2px 4px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.big{font-family:var(--script);font-size:clamp(30px,8vw,40px);color:var(--wine);line-height:1.2;margin:.2em 0 0}
+
+/* portada */
+.cover{background:
+  radial-gradient(90% 70% at 50% 25%,rgba(232,164,184,.55),transparent 70%),
+  linear-gradient(170deg,#7a2a4d,#4a1830 70%);
+  color:var(--blush);box-shadow:0 30px 60px rgba(0,0,0,.5), inset 10px 0 18px -10px rgba(0,0,0,.5), inset 0 0 0 1px rgba(232,201,138,.6)}
+.cover::before{border-color:rgba(232,201,138,.6)}
+.cover .kicker{font-size:19px;font-style:italic;color:var(--gold-soft);margin-bottom:6px}
+.cover .name{font-family:var(--script);font-size:clamp(88px,26vw,150px);line-height:1;margin:0;color:#fff;
+  text-shadow:0 0 30px rgba(232,164,184,.55)}
+.cover.active .name{animation:write 2.6s cubic-bezier(.6,0,.2,1) .6s both}
+@keyframes write{from{clip-path:inset(0 100% 0 0);opacity:.6}to{clip-path:inset(0 -10% 0 0);opacity:1}}
+.cover .sub{font-size:21px;font-style:italic;margin-top:12px;color:var(--blush)}
+.cover .hint{position:absolute;bottom:34px;font-size:16px;font-style:italic;color:var(--gold-soft);animation:nudge 2.4s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(7px)}}
+
+/* carta */
+.letter{text-align:left;align-items:stretch}
+.letter p{max-width:none;font-size:clamp(18px,4.4vw,20px)}
+.sign{font-family:var(--script);font-size:38px;color:var(--wine);text-align:right;margin-top:6px}
+
+/* ---------- NAV ---------- */
+.nav{display:flex;align-items:center;gap:16px;margin-top:14px;color:var(--blush)}
+.nav button{
+  width:50px;height:50px;border-radius:50%;border:1px solid rgba(232,201,138,.6);background:rgba(255,255,255,.07);
+  color:var(--gold-soft);cursor:pointer;display:grid;place-items:center;transition:background .15s, opacity .2s;
+}
+.nav button:active{background:rgba(232,201,138,.3)}
+.nav button:disabled{opacity:.25;cursor:default}
+.nav svg{width:22px;height:22px}
+.count{min-width:96px;text-align:center;font-size:18px;font-style:italic;color:var(--blush)}
+
+@media (prefers-reduced-motion:reduce){
+  .page.leaving,.page.entering,.page.leaving-back,.page.entering-back{animation-duration:.01s}
+  #lock .seal,.cover .hint{animation:none}
+  .cover.active .name{animation:none}
+}
+</style>
+</head>
+<body>
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<!-- CANDADO -->
+<section id="lock" aria-label="Ingresa el código">
+  <svg class="seal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/><path d="M12 3v2.2M9.6 4.4 10.5 6M14.4 4.4 13.5 6" opacity=".6"/></svg>
+  <h1>Para ti, Nurys</h1>
+  <p>Escribe nuestro código para abrir el libro</p>
+  <div class="dots" id="dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="msg" role="status" aria-live="polite"></div>
+  <div class="pad" id="pad"></div>
+</section>
+
+<!-- LIBRO -->
+<main id="book" aria-label="Libro de Nurys">
+  <div class="stage" id="stage"></div>
+  <nav class="nav" aria-label="Pasar páginas">
+    <button id="prev" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="count" id="count"></div>
+    <button id="next" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  </nav>
+</main>
+
+<script>
+/* =====================================================
+   TEXTOS DEL LIBRO  (puedes editarlos aquí con calma)
+   ===================================================== */
+const FIRMA = "Quien no deja de pensarte";
+
+const RULE = `<svg class="rule" viewBox="0 0 110 10" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M2 5h42M66 5h42"/><path d="M55 1.5c3 1.6 5 3 0 7-5-4-3-5.400 0-7Z" fill="currentColor" stroke="none"/></svg>`;
+const ico = p => `<svg class="icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICONS = {
+  hair:  ico('<path d="M24 6c-8 0-13 6-13 14 0 7 3 12 3 19M24 6c8 0 13 6 13 14 0 7-3 12-3 19"/><path d="M24 6c-2 8-2 16 2 24s2 9 2 9"/><path d="M18 14c3-1 6-1 9 1"/>'),
+  hand:  ico('<path d="M17 26V13a2.500 2.500 0 0 1 5 0v10M22 22V10a2.500 2.500 0 0 1 5 0v13M27 23V12a2.500 2.500 0 0 1 5 0v14M32 22v-5a2.500 2.500 0 0 1 5 0v11c0 8-5 13-12 13-6 0-9-3-12-8l-4-7a2.400 2.400 0 0 1 4-2.500l3 3"/>'),
+  eye:   ico('<path d="M4 24c5-8 11-12 20-12s15 4 20 12c-5 8-11 12-20 12S9 32 4 24Z"/><circle cx="24" cy="24" r="6"/><circle cx="26" cy="22" r="1.400" fill="currentColor" stroke="none"/>'),
+  smile: ico('<circle cx="24" cy="24" r="18"/><path d="M15 27c2.500 5 15.500 5 18 0"/><path d="M17 19v1M31 19v1"/>'),
+  face:  ico('<path d="M24 5c-8 0-12 6-12 14 0 10 6 20 12 20s12-10 12-20c0-8-4-14-12-14Z"/><path d="M19 22h.01M29 22h.01M21 31c2 1.500 4 1.500 6 0"/>'),
+  dress: ico('<path d="M19 5l5 6 5-6M19 5c0 8-1 12-3 16L8 42h32l-8-21c-2-4-3-8-3-16"/><path d="M16 21h16"/>'),
+  posture: ico('<circle cx="24" cy="9" r="4"/><path d="M24 13v14M24 27l-6 15M24 27l6 15M14 19l10-4 10 4"/>'),
+  flower:ico('<circle cx="24" cy="22" r="4"/><path d="M24 18c-3-6-1-11 0-12 1 1 3 6 0 12ZM27.800 20.500c6-3 11-1 12 0-1 1-6 3-12 0ZM26.500 25.500c5 4 5 9 4 10-1 0-6-2-4-10ZM21.500 25.500c-5 4-5 9-4 10 1 0 6-2 4-10ZM20.200 20.500c-6-3-11-1-12 0 1 1 6 3 12 0Z"/><path d="M24 30v13M24 38c-4-1-6-3-7-6M24 36c4-1 6-3 7-6"/>'),
+  heart: ico('<path d="M24 41S7 31 7 19a8.500 8.500 0 0 1 17-2 8.500 8.500 0 0 1 17 2c0 12-17 22-17 22Z"/>'),
+  camera:ico('<path d="M6 16h9l3-5h12l3 5h9v22H6Z"/><circle cx="24" cy="26" r="7"/>'),
+  mail:  ico('<rect x="6" y="11" width="36" height="26" rx="2"/><path d="M6 13l18 14 18-14"/>')
+};
+
+const PAGES = [
+  { cover:true, html:`
+    <div class="kicker">un libro escrito para</div>
+    <h1 class="name">Nurys</h1>
+    <div class="sub">y todo lo que veo cuando te miro</div>
+    <div class="hint">desliza para abrir →</div>` },
+
+  { icon:'hair', title:'Tu cabello', html:`
+    <p>Era negro, profundo, como una noche sin luna. Un día decidiste cambiarlo, y ahora cae largo y liso, con mechones claros que atrapan la luz cada vez que te mueves.</p>
+    <p>Lo curioso es que cambió el color, pero no lo que me hace sentir. Negro o claro, cuando lo veo acomodarse sobre tu hombro, me quedo mirándolo un segundo de más.</p>
+    <p class="small">Me gustas con cualquier color. Me gustas tú.</p>` },
+
+  { icon:'face', title:'Tu rostro', html:`
+    <p>Tienes un rostro tranquilo, de esos que se ven suaves aun cuando no dices nada. Tu piel tiene un tono cálido, como si siempre guardara un poco de sol.</p>
+    <p>Las mejillas se te marcan cuando sonríes, y tus facciones son delicadas, con un aire dulce que contrasta con la fuerza que tienes por dentro.</p>
+    <p class="small">Un rostro que uno quisiera ver todos los días.</p>` },
+
+  { icon:'eye', title:'Tu mirada', html:`
+    <p>Tus ojos son oscuros y cálidos, y dicen más de lo que tú crees. Con lentes o sin ellos, tienes una mirada que a veces es tímida y a veces te desarma.</p>
+    <p>Cuando bajas la vista y luego la levantas despacio, siento que el mundo se pone en pausa un momento.</p>
+    <p class="small">Ahí me pierdo, y no tengo ganas de que me encuentren.</p>` },
+
+  { icon:'smile', title:'Tu sonrisa', html:`
+    <p>No sonríes de forma exagerada. Tu sonrisa es pequeña, un poco de lado, y siempre parece tener un secreto detrás.</p>
+    <p>Cuando se te escapa una risa de verdad, se te achinan los ojos y todo alrededor se aligera. Es mi sonido favorito, y mi gesto favorito.</p>
+    <p class="small">Haría cualquier cosa por provocarla una vez más.</p>` },
+
+  { icon:'hand', title:'Tus manos', html:`
+    <p>Tus manos son finas y delicadas, de dedos largos que se mueven con mucha gracia, aun cuando solo estás acomodándote el pelo.</p>
+    <p>Siempre traes tus uñas cuidadas, y me fijo en ellas más de lo que admito.</p>
+    <p class="small">Tengo una idea muy clara de cómo encajarían con las mías.</p>` },
+
+  { icon:'flower', title:'Tus detalles', html:`
+    <p>Hay pequeñas cosas tuyas que me encantan: tus aretes discretos, esos lentes delgados que te dan un aire tierno y pensativo, los mechones claros que se te escapan sobre la cara.</p>
+    <p>Son detalles chiquitos, pero juntos forman a la Nurys que reconozco en cualquier lugar.</p>
+    <p class="small">Me fijo en todo lo que te hace ser tú.</p>` },
+
+  { icon:'posture', title:'Tu altura', html:`
+    <p>Casi somos de la misma estatura, tú apenas un poquito más pequeña. Justo lo necesario para que, cuando estamos cerca, todo encaje.</p>
+    <p>Para mirarte a los ojos no tengo que agacharme ni tú tienes que estirarte. Quedamos frente a frente, a la misma altura.</p>
+    <p class="small">Ese poquito de diferencia es de mis detalles favoritos.</p>` },
+
+  { icon:'flower', title:'Tu olor', html:`
+    <p>Hay un olor tuyo que reconozco en cualquier parte. Cuando estás cerca y llega hasta mí, me siento en las nubes.</p>
+    <p>Es de esas cosas que no se pueden explicar bien con palabras, solo se sienten. Una calma suave, dulce y familiar.</p>
+    <p class="small">Si pudiera guardarlo en un frasco, lo haría.</p>` },
+
+  { icon:'dress', title:'Tu estilo', html:`
+    <p>Te queda bien lo sencillo. Un vestido blanco, unas sandalias plateadas, y de repente eres lo más bonito de todo el lugar.</p>
+    <p>Pero lo que más me gusta es que no te esfuerzas por parecer nadie más. Tu manera de vestir se siente como tú: cómoda, coqueta a tu manera y muy natural.</p>
+    <p class="small">Lo que llevas puesto es lo de menos, tú lo llenas todo.</p>` },
+
+
+  { icon:'flower', title:'Tu personalidad', html:`
+    <p><em>Fuerte y delicada, a la vez.</em> Sabes sostenerte cuando el día pesa, y aun así tratas todo con ternura.</p>
+    <p>Eres amable con la gente sin pedir nada a cambio, y divertida de una manera que no se puede planear: una ocurrencia, una mirada de reojo, y ya estamos riéndonos.</p>
+    <p>Contigo se puede hablar de todo o no hablar de nada, y da igual.</p>
+    <p class="small">Mezclas dulzura y carácter, y esa mezcla es tu magia.</p>` }
+];
+
+/* =====================================================
+   CÓDIGO DEL LIBRO
+   ===================================================== */
+const HASH = "efa5a01d1785511a9fabfe15d7e41dd8bc34649f2a407dc5c6c19e91b9fb77f3"; // contraseña protegida
+const CODE_LEN = 6;
+
+/* ---------- Candado ---------- */
+const lock = document.getElementById('lock');
+const dots = document.getElementById('dots');
+const msg  = document.getElementById('msg');
+const pad  = document.getElementById('pad');
+let entered = "";
+
+['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+  const b = document.createElement('button');
+  b.type='button';
+  if(k===''){ b.className='ghost'; b.disabled=true; b.setAttribute('aria-hidden','true'); }
+  else { b.textContent=k; if(k==='⌫'){b.className='ghost'; b.setAttribute('aria-label','Borrar');} b.addEventListener('click',()=>press(k)); }
+  pad.appendChild(b);
+});
+document.addEventListener('keydown',e=>{
+  if(lock.classList.contains('gone')) return;
+  if(/^[0-9]$/.test(e.key)) press(e.key);
+  else if(e.key==='Backspace') press('⌫');
+});
+
+function paint(){ [...dots.children].forEach((d,i)=>d.classList.toggle('on', i<entered.length)); }
+async function sha(s){
+  try{
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){ return null; }
+}
+async function press(k){
+  if(k==='⌫'){ entered = entered.slice(0,-1); msg.textContent=''; paint(); return; }
+  if(entered.length>=CODE_LEN) return;
+  entered += k; paint();
+  if(entered.length===CODE_LEN){
+    const h = await sha(entered);
+    const ok = h ? h===HASH : entered==="060123";
+    if(ok){ msg.textContent='Bienvenida 💗'; setTimeout(openBook,500); }
+    else{
+      msg.textContent='Ese no es el código. Inténtalo otra vez 💗';
+      dots.classList.add('shake');
+      setTimeout(()=>{dots.classList.remove('shake'); entered=''; paint();},500);
+    }
+  }
+}
+
+/* ---------- Libro ---------- */
+const stage = document.getElementById('stage');
+const prev = document.getElementById('prev');
+const next = document.getElementById('next');
+const count = document.getElementById('count');
+const book = document.getElementById('book');
+let cur = 0, busy = false;
+
+const els = PAGES.map((p,i)=>{
+  const d = document.createElement('article');
+  d.className = 'page' + (p.cover?' cover':'') + (p.letter?' letter':'');
+  d.setAttribute('aria-label', p.title || 'Portada');
+  d.innerHTML = p.cover ? p.html :
+    `<div class="scroll">${ICONS[p.icon]||''}<h2>${p.title}</h2>${RULE}${p.html}</div>`;
+  stage.appendChild(d);
+  return d;
+});
+
+function update(){
+  prev.disabled = cur===0;
+  next.disabled = cur===PAGES.length-1;
+  count.textContent = cur===0 ? 'Portada' : `${cur} de ${PAGES.length-1}`;
+}
+function go(to){
+  if(busy || to<0 || to>=PAGES.length || to===cur) return;
+  busy = true;
+  const fwd = to>cur, a = els[cur], b = els[to];
+  a.className = a.className.replace(/ ?active/,'') ;
+  if(fwd){ a.classList.add('leaving'); b.classList.add('entering'); }
+  else   { a.classList.add('leaving-back'); b.classList.add('entering-back'); }
+  cur = to; update();
+  setTimeout(()=>{
+    els.forEach(e=>e.classList.remove('leaving','entering','leaving-back','entering-back','active'));
+    b.classList.add('active'); busy=false;
+    const sc=b.querySelector('.scroll'); if(sc) sc.scrollTop=0;
+  }, 820);
+}
+prev.onclick = ()=>go(cur-1);
+next.onclick = ()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(!lock.classList.contains('gone')) return;
+  if(e.key==='ArrowRight') go(cur+1);
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+/* deslizar con el dedo */
+let sx=0, sy=0;
+stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX; sy=e.touches[0].clientY;},{passive:true});
+stage.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.3) go(dx<0?cur+1:cur-1);
+},{passive:true});
+
+function openBook(){
+  lock.classList.add('gone');
+  book.classList.add('show');
+  els[0].classList.add('active');
+  update();
+  petalBoost = 90;
+}
+
+/* ---------- Pétalos ---------- */
+const cv = document.getElementById('petals'), cx = cv.getContext('2d');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W,H,petals=[], petalBoost=0;
+function size(){ const r=devicePixelRatio||1; W=innerWidth; H=innerHeight; cv.width=W*r; cv.height=H*r; cx.setTransform(r,0,0,r,0,0); }
+addEventListener('resize',size); size();
+function mk(top){
+  return { x:Math.random()*W, y: top? -20 : Math.random()*H, s:6+Math.random()*10,
+           vy:.35+Math.random()*.8, vx:-.3+Math.random()*.6, r:Math.random()*6.28, vr:(-.02+Math.random()*.04),
+           w:Math.random()*6.28, a:.35+Math.random()*.5, c:Math.random()<.25?'#e8c98a':(Math.random()<.5?'#e8a4b8':'#f7dde4') };
+}
+const N = reduce ? 0 : (W<600?22:38);
+for(let i=0;i<N;i++) petals.push(mk(false));
+function petal(p){
+  cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.globalAlpha=p.a; cx.fillStyle=p.c;
+  cx.beginPath(); cx.moveTo(0,-p.s);
+  cx.bezierCurveTo(p.s*.9,-p.s*.6,p.s*.7,p.s*.7,0,p.s);
+  cx.bezierCurveTo(-p.s*.7,p.s*.7,-p.s*.9,-p.s*.6,0,-p.s); cx.fill(); cx.restore();
+}
+function loop(){
+  cx.clearRect(0,0,W,H);
+  if(petalBoost>0 && !reduce){ petals.push(mk(true)); petalBoost--; }
+  petals.forEach((p,i)=>{
+    p.w+=.02; p.x+=p.vx+Math.sin(p.w)*.5; p.y+=p.vy; p.r+=p.vr; petal(p);
+    if(p.y>H+20){ if(petals.length>N+2 && i>=N) petals.splice(i,1); else Object.assign(p,mk(true)); }
+  });
+  requestAnimationFrame(loop);
+}
+if(!reduce) requestAnimationFrame(loop);
+</script>
+</body>
+</html>
