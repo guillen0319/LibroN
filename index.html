@@ -178,6 +178,26 @@ body{
 #lbx{top:calc(10px + env(safe-area-inset-top,0px));right:12px}
 #lbp{bottom:calc(14px + env(safe-area-inset-bottom,0px));left:12px}
 #lbn{bottom:calc(14px + env(safe-area-inset-bottom,0px));right:12px}
+
+/* ---------- AVISO DE CAMBIO ---------- */
+#notice{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(20,6,14,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#notice.open{display:flex}
+.ncard{
+  width:min(380px,100%);text-align:center;padding:28px 24px 22px;border-radius:16px;color:var(--ink);
+  background:radial-gradient(90% 60% at 50% 0%,rgba(247,221,228,.8),transparent 70%),linear-gradient(180deg,var(--paper),#fbe9e4);
+  box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(201,154,75,.55);animation:pop .55s cubic-bezier(.2,.9,.3,1.2) both;
+}
+@keyframes pop{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+.ncard .nicon{width:44px;height:44px;color:var(--gold);margin:0 auto 4px;display:block}
+.ncard h3{font-family:var(--script);font-weight:400;font-size:38px;line-height:1.1;margin:0 0 8px;color:var(--wine)}
+.ncard p{margin:0 0 16px;font-size:19px;line-height:1.45}
+.nbtns{display:flex;flex-direction:column;gap:10px}
+.nbtns button{font:500 19px var(--serif);padding:12px 16px;border-radius:999px;cursor:pointer;transition:transform .1s, background .15s}
+.nbtns button:active{transform:scale(.97)}
+.nbtns .yes{background:var(--wine);color:#fff;border:1px solid var(--wine)}
+.nbtns .not{background:transparent;color:var(--wine);border:1px solid rgba(74,24,48,.45)}
+.nbtns button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.ncard{animation:none}}
 </style>
 </head>
 <body>
@@ -202,6 +222,19 @@ body{
     <button id="next" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
   </nav>
 </main>
+
+<!-- AVISO DE CAMBIO -->
+<div id="notice" role="dialog" aria-modal="true" aria-labelledby="ntitle">
+  <div class="ncard">
+    <svg class="nicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.600L18.500 9.400 13.800 11.200 12 16l-1.800-4.800L5.500 9.400l4.700-1.800z"/><path d="M18.500 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+    <h3 id="ntitle"></h3>
+    <p id="ntext"></p>
+    <div class="nbtns">
+      <button type="button" class="yes" id="nyes"></button>
+      <button type="button" class="not" id="nno"></button>
+    </div>
+  </div>
+</div>
 
 <!-- RECUERDOS -->
 <section id="gallery" aria-label="Nuestros recuerdos">
@@ -300,7 +333,15 @@ const PAGES = [
     <p><em>Fuerte y delicada, a la vez.</em> Sabes sostenerte cuando el día pesa, y aun así tratas todo con ternura.</p>
     <p>Eres amable con la gente sin pedir nada a cambio, y divertida de una manera que no se puede planear: una ocurrencia, una mirada de reojo, y ya estamos riéndonos.</p>
     <p>Contigo se puede hablar de todo o no hablar de nada, y da igual.</p>
-    <p class="small">Mezclas dulzura y carácter, y esa mezcla es tu magia.</p>` }
+    <p class="small">Mezclas dulzura y carácter, y esa mezcla es tu magia.</p>` },
+
+  /* ===== PÁGINA NUEVA: TE EXTRAÑO (edita los textos entre las comillas invertidas ` `) ===== */
+  { icon:'heart', title:'Te extraño', letter:true, html:`
+    <p>Nurys:</p>
+    <p>Hay días en que te pienso más de la cuenta, y hoy es uno de esos. Quería decirte, sin rodeos, que te extraño.</p>
+    <p>Extraño verte, escuchar lo que tienes para contar y estar cerca de ti. Se me hace raro que el tiempo pase y no estés al lado.</p>
+    <p>Por eso quise dejarte esta página, para que sepas que sigues presente en mis pensamientos, incluso cuando no lo digo.</p>
+    <div class="sign">${FIRMA}</div>` }
 ];
 
 /* =====================================================
@@ -325,7 +366,7 @@ let entered = "";
   pad.appendChild(b);
 });
 document.addEventListener('keydown',e=>{
-  if(lock.classList.contains('gone')) return;
+  if(lock.classList.contains('gone') || notice.classList.contains('open')) return;
   if(/^[0-9]$/.test(e.key)) press(e.key);
   else if(e.key==='Backspace') press('⌫');
 });
@@ -394,7 +435,7 @@ function go(to){
 prev.onclick = ()=>go(cur-1);
 next.onclick = ()=>go(cur+1);
 document.addEventListener('keydown',e=>{
-  if(!book.classList.contains('show')) return;
+  if(!book.classList.contains('show') || notice.classList.contains('open')) return;
   if(e.key==='ArrowRight') go(cur+1);
   if(e.key==='ArrowLeft') go(cur-1);
 });
@@ -413,6 +454,35 @@ function openBook(){
   update();
   petalBoost = 90;
 }
+
+/* ---------- Aviso de cambio ---------- */
+/* Edita aquí los textos. Si algún día haces OTRO cambio y quieres que vuelva a salir,
+   solo cambia el "id" (por ejemplo a "cambio-2"). */
+const AVISO = {
+  id: "cambio-1",
+  titulo: "Se hizo un cambio ✨",
+  texto: "Hay algo nuevo en el libro. ¿Ya encontraste la página nueva?",
+  si: "Ya la encontré 💗",
+  no: "Todavía no"
+};
+const notice = document.getElementById('notice');
+const nKey = 'aviso-visto-' + AVISO.id;
+function avisoVisto(){ try{ return localStorage.getItem(nKey)==='1'; }catch(e){ return false; } }
+function marcarVisto(){ try{ localStorage.setItem(nKey,'1'); }catch(e){} }
+document.getElementById('ntitle').textContent = AVISO.titulo;
+document.getElementById('ntext').textContent  = AVISO.texto;
+document.getElementById('nyes').textContent   = AVISO.si;
+document.getElementById('nno').textContent    = AVISO.no;
+function mostrarAviso(){
+  if(avisoVisto()) return;
+  notice.classList.add('open');
+  document.getElementById('nyes').focus({preventScroll:true});
+}
+function cerrarAviso(){ notice.classList.remove('open'); }
+document.getElementById('nyes').onclick = ()=>{ marcarVisto(); cerrarAviso(); };
+document.getElementById('nno').onclick = cerrarAviso;   // se cierra; volverá a salir en la próxima visita
+setTimeout(mostrarAviso, 700);   // sale apenas carga la página, antes de pedir el código
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && notice.classList.contains('open')) document.getElementById('nno').click(); });
 
 /* ---------- Recuerdos (fotos y videos) ---------- */
 const MEDIA_FOLDER = "media";              // carpeta del repositorio donde subes las fotos y videos
