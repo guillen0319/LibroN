@@ -179,6 +179,16 @@ body{
 #lbp{bottom:calc(14px + env(safe-area-inset-bottom,0px));left:12px}
 #lbn{bottom:calc(14px + env(safe-area-inset-bottom,0px));right:12px}
 
+/* ---------- MÚSICA ---------- */
+#music{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;z-index:6;width:44px;height:44px;border-radius:50%;
+  border:1px solid rgba(232,201,138,.6);background:rgba(255,255,255,.08);color:var(--gold-soft);cursor:pointer;display:grid;place-items:center;transition:background .15s}
+#music:active{background:rgba(232,201,138,.3)}
+#music svg{width:22px;height:22px}
+#music .off{display:none}
+#music.muted .on{display:none}
+#music.muted .off{display:block}
+#music:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px}
+
 /* ---------- AVISO DE CAMBIO ---------- */
 #notice{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(20,6,14,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #notice.open{display:flex}
@@ -215,6 +225,10 @@ body{
 
 <!-- LIBRO -->
 <main id="book" aria-label="Libro de Nurys">
+  <button id="music" type="button" class="muted" aria-label="Activar o silenciar la música">
+    <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.500v5h4l5 4v-13l-5 4z"/><path d="M16.500 9a4 4 0 0 1 0 6M19 6.500a8 8 0 0 1 0 11"/></svg>
+    <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.500v5h4l5 4v-13l-5 4z"/><path d="M17 9.500l5 5M22 9.500l-5 5"/></svg>
+  </button>
   <div class="stage" id="stage"></div>
   <nav class="nav" aria-label="Pasar páginas">
     <button id="prev" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -293,15 +307,30 @@ const PAGES = [
     <p>Las mejillas se te marcan cuando sonríes, y tus facciones son delicadas, con un aire dulce que contrasta con la fuerza que tienes por dentro.</p>
     <p class="small">Un rostro que uno quisiera ver todos los días.</p>` },
 
+  { icon:'face', title:'Tu piel', html:`
+    <p>Tu piel tiene un tono cálido y suave, de esos que parecen guardar un poco de sol aun en los días nublados.</p>
+    <p>Se ve cuidada, fresca y luminosa, y con cualquier luz, del día o de la noche, se ve igual de bonita.</p>
+    <p class="small">Hay algo en tu forma de verte que transmite calma.</p>` },
+
   { icon:'eye', title:'Tu mirada', html:`
     <p>Tus ojos son oscuros y cálidos, y dicen más de lo que tú crees. Con lentes o sin ellos, tienes una mirada que a veces es tímida y a veces te desarma.</p>
     <p>Cuando bajas la vista y luego la levantas despacio, siento que el mundo se pone en pausa un momento.</p>
     <p class="small">Ahí me pierdo, y no tengo ganas de que me encuentren.</p>` },
 
+  { icon:'eye', title:'Tus lentes', html:`
+    <p>Con tus lentes delgados tienes un aire dulce y pensativo, como si estuvieras a punto de decir algo inteligente o de soltar una broma.</p>
+    <p>Me encanta cómo se te acomodan en la cara y cómo, cuando te los arreglas con un dedo, el momento se siente un poquito en cámara lenta.</p>
+    <p class="small">Contigo, hasta algo tan simple como unos lentes se ve especial.</p>` },
+
   { icon:'smile', title:'Tu sonrisa', html:`
     <p>No sonríes de forma exagerada. Tu sonrisa es pequeña, un poco de lado, y siempre parece tener un secreto detrás.</p>
     <p>Cuando se te escapa una risa de verdad, se te achinan los ojos y todo alrededor se aligera. Es mi sonido favorito, y mi gesto favorito.</p>
     <p class="small">Haría cualquier cosa por provocarla una vez más.</p>` },
+
+  { icon:'smile', title:'Tu risa', html:`
+    <p>Tu risa merece una página para ella sola. Cuando algo te da gracia de verdad, se te nota en toda la cara.</p>
+    <p>Es contagiosa: empiezas tú y terminamos todos riéndonos, aunque ni siquiera sepamos de qué.</p>
+    <p class="small">Si pudiera elegir un solo sonido para escuchar todos los días, sería ese.</p>` },
 
   { icon:'hand', title:'Tus manos', html:`
     <p>Tus manos son finas y delicadas, de dedos largos que se mueven con mucha gracia, aun cuando solo estás acomodándote el pelo.</p>
@@ -334,6 +363,26 @@ const PAGES = [
     <p>Eres amable con la gente sin pedir nada a cambio, y divertida de una manera que no se puede planear: una ocurrencia, una mirada de reojo, y ya estamos riéndonos.</p>
     <p>Contigo se puede hablar de todo o no hablar de nada, y da igual.</p>
     <p class="small">Mezclas dulzura y carácter, y esa mezcla es tu magia.</p>` },
+
+  { icon:'posture', title:'Tu fuerza', html:`
+    <p>Hay una fuerza en ti que no necesita ruido para notarse. Se ve en cómo enfrentas lo difícil y en cómo sigues adelante cuando las cosas se complican.</p>
+    <p>No lo haces por aparentar, lo haces porque así eres: valiente a tu manera, con firmeza y sin perder la calma.</p>
+    <p class="small">Admiro eso de ti más de lo que puedo explicar.</p>` },
+
+  { icon:'heart', title:'Tu ternura', html:`
+    <p>Y a la vez eres delicada. Hay una ternura en tus detalles, en tu forma de tratar a los demás y de cuidar lo que te importa.</p>
+    <p>Pocas personas logran ser fuertes sin dejar de ser suaves, y tú lo haces parecer natural.</p>
+    <p class="small">Esa mezcla es de lo más bonito que tienes.</p>` },
+
+  { icon:'flower', title:'Tu amabilidad', html:`
+    <p>Eres amable de verdad, de las que saludan con cariño, escuchan con atención y tratan bien a todos sin esperar nada a cambio.</p>
+    <p>Esa bondad hace que la gente a tu alrededor se sienta cómoda, y a mí me hace sentir muy afortunado de conocerte.</p>
+    <p class="small">Un corazón así se nota desde lejos.</p>` },
+
+  { icon:'smile', title:'Tu sentido del humor', html:`
+    <p>Eres divertida sin proponértelo. Tienes ocurrencias, miradas y comentarios que cambian el ánimo de cualquier momento.</p>
+    <p>Contigo no hay silencios incómodos ni días aburridos, porque siempre aparece algo que nos hace reír.</p>
+    <p class="small">Tu humor es otra forma de tu cariño.</p>` },
 
   /* ===== PÁGINA NUEVA: TE EXTRAÑO (edita los textos entre las comillas invertidas ` `) ===== */
   { icon:'heart', title:'Te extraño', letter:true, html:`
@@ -381,6 +430,7 @@ async function sha(s){
 async function press(k){
   if(k==='⌫'){ entered = entered.slice(0,-1); msg.textContent=''; paint(); return; }
   if(entered.length>=CODE_LEN) return;
+  unlockSong();
   entered += k; paint();
   if(entered.length===CODE_LEN){
     const h = await sha(entered);
@@ -453,15 +503,43 @@ function openBook(){
   els[0].classList.add('active');
   update();
   petalBoost = 90;
+  startSong();
 }
+
+/* ---------- Música (solo en el libro) ---------- */
+const MUSIC_SRC = "musica/luminary.mp3";   // ruta del archivo en tu repositorio
+const MUSIC_VOL = 0.45;                    // volumen final (0 a 1)
+const song = new Audio(); song.src = MUSIC_SRC; song.loop = true; song.preload = 'auto'; song.volume = 0;
+const mbtn = document.getElementById('music');
+let songReady = false, fadeT = null;
+function fadeTo(v, ms, done){
+  clearInterval(fadeT); const from = song.volume, steps = 24, dt = ms/steps; let i = 0;
+  fadeT = setInterval(()=>{ i++; song.volume = Math.max(0, Math.min(1, from + (v-from)*i/steps)); if(i>=steps){ clearInterval(fadeT); done && done(); } }, dt);
+}
+/* el navegador solo deja sonar audio después de un toque: "desbloqueamos" al primer dígito del código */
+function unlockSong(){
+  if(songReady) return; songReady = true;
+  const p = song.play(); if(p && p.then) p.then(()=>{ song.pause(); song.currentTime = 0; }).catch(()=>{ songReady = false; });
+}
+function startSong(){
+  song.volume = 0;
+  const p = song.play();
+  const ok = ()=>{ mbtn.classList.remove('muted'); fadeTo(MUSIC_VOL, 3500); };
+  if(p && p.then) p.then(ok).catch(()=>{ mbtn.classList.add('muted'); }); else ok();
+}
+mbtn.onclick = ()=>{
+  if(song.paused){ song.play().then(()=>{ mbtn.classList.remove('muted'); fadeTo(MUSIC_VOL, 800); }).catch(()=>{}); }
+  else { mbtn.classList.add('muted'); fadeTo(0, 500, ()=>song.pause()); }
+};
+document.addEventListener('visibilitychange',()=>{ if(document.hidden && !song.paused){ song.pause(); mbtn.classList.add('muted'); } });
 
 /* ---------- Aviso de cambio ---------- */
 /* Edita aquí los textos. Si algún día haces OTRO cambio y quieres que vuelva a salir,
    solo cambia el "id" (por ejemplo a "cambio-2"). */
 const AVISO = {
-  id: "cambio-1",
+  id: "cambio-2",
   titulo: "Se hizo un cambio ✨",
-  texto: "Hay algo nuevo en el libro. ¿Ya encontraste la página nueva?",
+  texto: "Hay cosas nuevas en el libro. ¿Ya las encontraste?",
   si: "Ya la encontré 💗",
   no: "Todavía no"
 };
